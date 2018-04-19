@@ -20,19 +20,51 @@ heroes_simple = JSON.parse(File.read('./heroes.json'))
 heroes_details = JSON.parse(File.read('./hero.json'))
 
 get "/" do
-  "Hello world!"
+  [
+    '<a href="/heroes">/heroes<br><b><i><small>Heroes Listing</small></i></b></a>',
+    '<a href="/hero/thrall">/hero/thrall<br><b><i><small>Hero Search (eg: Thrall)</small></i></b></a>',
+    '<a href="/hero/thrall?aspects=role">/hero/thrall?aspects=role<br><b><i><small>Explicit Hero Search Aspects</small></i></b></a>',
+    '<a href="/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug">/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug<br><b><i><small>Multiple aspects on hero search</small></i></b></a>'
+  ].join("<br><br>")
 end
 
 get "/heroes" do
   content_type :json
-  heroes_simple
+  heroes_simple.to_json
 end
 
 get "/hero/:name" do
   content_type :json
-  hero = heroes_simple.select do  |key, hero|
+  result = heroes_simple.select do  |key, hero|
     hero['slug'].include? params['name']
   end
-  hero.to_json
+
+  # Check if we want specific aspects or children nodes
+  if result && params['aspects'] && result[params['name']]
+    # Multiple options
+    if params['aspects'].is_a?(Array)
+      new_result = {}
+      params['aspects'].each do |aspect|
+        new_result[aspect] = result[params['name']][aspect]
+      end
+      return new_result.to_json
+    end
+
+    # Single string
+    if params['aspects'].is_a?(String) && result[params['name']][params['aspects']]
+      return result[params['name']][params['aspects']].to_json
+    end    
+  end
+
+  result.to_json
+end
+
+error do
+  "sinatra error handler" 
+end
+
+not_found do 
+  status 404
+  [].to_json
 end
 # [END app]
