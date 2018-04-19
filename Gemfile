@@ -16,9 +16,9 @@
 source "https://rubygems.org"
 
 gem "sinatra"
-gem "rerun"
 # [END dependencies]
 
 group :test do
   gem "rspec"
+  gem "rerun"
 end
