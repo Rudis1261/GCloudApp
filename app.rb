@@ -20,12 +20,15 @@ heroes_simple = JSON.parse(File.read('./heroes.json'))
 heroes_details = JSON.parse(File.read('./hero.json'))
 
 get "/" do
-  [
-    '<a href="/heroes">/heroes<br><b><i><small>Heroes Listing</small></i></b></a>',
-    '<a href="/hero/thrall">/hero/thrall<br><b><i><small>Hero Search (eg: Thrall)</small></i></b></a>',
-    '<a href="/hero/thrall?aspects=role">/hero/thrall?aspects=role<br><b><i><small>Explicit Hero Search Aspects</small></i></b></a>',
-    '<a href="/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug">/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug<br><b><i><small>Multiple aspects on hero search</small></i></b></a>'
-  ].join("<br><br>")
+  content_type :json
+  { 
+    'routes': [
+      '/heroes',
+      '/hero/thrall',
+      '/hero/thrall?aspects=role',
+      '/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug">/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug'
+    ]
+  }.to_json
 end
 
 get "/heroes" do
