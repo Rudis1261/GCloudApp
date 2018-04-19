@@ -16,6 +16,8 @@
 source "https://rubygems.org"
 
 gem "sinatra"
+gem 'pdfkit', '~> 0.8.2'
+gem 'wkhtmltopdf-binary', '~> 0.12.3.1'
 # [END dependencies]
 
 group :test do

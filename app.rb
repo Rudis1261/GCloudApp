@@ -15,52 +15,38 @@
 # [START app]
 require "sinatra"
 require "json"
+require 'pdfkit'
 
-heroes_simple = JSON.parse(File.read('./heroes.json'))
-heroes_details = JSON.parse(File.read('./hero.json'))
-
-get "/" do
-  [
-    '<a href="/heroes">/heroes<br><b><i><small>Heroes Listing</small></i></b></a>',
-    '<a href="/hero/thrall">/hero/thrall<br><b><i><small>Hero Search (eg: Thrall)</small></i></b></a>',
-    '<a href="/hero/thrall?aspects=role">/hero/thrall?aspects=role<br><b><i><small>Explicit Hero Search Aspects</small></i></b></a>',
-    '<a href="/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug">/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug<br><b><i><small>Multiple aspects on hero search</small></i></b></a>'
-  ].join("<br><br>")
+PDFKit.configure do |config|
+  config.default_options = {
+    :page_size => 'A4',
+    :print_media_type => true,
+    :image_quality => 100,
+    :image_dpi => 1200,
+    :dpi => 300
+  }
+  config.verbose = true
 end
 
-get "/heroes" do
-  content_type :json
-  heroes_simple.to_json
-end
+post "/" do
+  status 200
+  response.headers['Content-Type'] = 'application/json'
+  html = request.body.read
 
-get "/hero/:name" do
-  content_type :json
-  result = heroes_simple.select do  |key, hero|
-    hero['slug'].include? params['name']
+  if html.nil? || html == ''
+    status 400
+    return fail('400 - Bad request').to_json
   end
 
-  # Check if we want specific aspects or children nodes
-  if result && params['aspects'] && result[params['name']]
-    # Multiple options
-    if params['aspects'].is_a?(Array)
-      new_result = {}
-      params['aspects'].each do |aspect|
-        new_result[aspect] = result[params['name']][aspect]
-      end
-      return new_result.to_json
-    end
-
-    # Single string
-    if params['aspects'].is_a?(String) && result[params['name']][params['aspects']]
-      return result[params['name']][params['aspects']].to_json
-    end    
-  end
-
-  result.to_json
+  result = PDFKit.new(html).to_pdf
+  response.headers['Content-Type'] = 'application/pdf'
+  response.headers['Content-Disposition'] = 'inline'
+  response.headers['Content-Length'] = result.size
+  return result
 end
 
 error do
-  "sinatra error handler" 
+  "something went horribly wrong..." 
 end
 
 not_found do 
