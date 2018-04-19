@@ -28,6 +28,10 @@ PDFKit.configure do |config|
   config.verbose = true
 end
 
+get "/" do
+  "This is bob"
+end 
+
 post "/" do
   status 200
   response.headers['Content-Type'] = 'application/json'
