@@ -25,8 +25,8 @@ get "/" do
     'routes': [
       '/heroes',
       '/hero/thrall',
-      '/hero/thrall?aspects=role',
-      '/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug">/hero/thrall?aspects[]=role&aspects[]=name&aspects[]=slug'
+      '/hero/thrall?prop=role',
+      '/hero/thrall?prop[]=role&prop[]=name&prop[]=slug">/hero/thrall?prop[]=role&prop[]=name&prop[]=slug'
     ]
   }.to_json
 end
@@ -38,25 +38,29 @@ end
 
 get "/hero/:name" do
   content_type :json
+
   result = heroes_simple.select do  |key, hero|
     hero['slug'].include? params['name']
   end
 
-  # Check if we want specific aspects or children nodes
-  if result && params['aspects'] && result[params['name']]
-    # Multiple options
-    if params['aspects'].is_a?(Array)
-      new_result = {}
-      params['aspects'].each do |aspect|
-        new_result[aspect] = result[params['name']][aspect]
-      end
-      return new_result.to_json
+  if result && params['prop'] && params['prop'].is_a?(String)
+    items = {}
+    result.keys.each do |hero_name|
+      items[hero_name] = { params['prop'] => result[hero_name][params['prop']] }
     end
+    return items.to_json
+  end    
 
-    # Single string
-    if params['aspects'].is_a?(String) && result[params['name']][params['aspects']]
-      return result[params['name']][params['aspects']].to_json
-    end    
+  if result && params['prop'] && params['prop'].is_a?(Array)
+    items = {}
+    result.keys.each do |hero_name|
+      entry = {}
+      params['prop'].each do |prop|
+        entry[prop] = result[hero_name][prop]
+      end
+      items[hero_name] = entry
+    end
+    return items.to_json
   end
 
   result.to_json
